@@ -1,0 +1,10 @@
+{
+  "loss_total": 1.5390625,
+  "loss_img": 0.296875,
+  "loss_mask": 1.2421875,
+  "suggested_lambda_mask": 0.2389937106918239,
+  "ae_recon_initial": 1.3046875,
+  "ae_recon_final": 0.21484375,
+  "ae_recon_improvement_pct": 83.53293413173652,
+  "pretrain_strictly_required": false
+}

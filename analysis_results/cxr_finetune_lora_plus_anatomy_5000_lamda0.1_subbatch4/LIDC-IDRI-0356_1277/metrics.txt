@@ -1,0 +1,23 @@
+============================================================
+Segmentation Metrics Report
+============================================================
+
+Image: /home/wenting/zr/gen_code/outputs/cxr_finetune_lora_plus_anatomy_5000_lamda0.1_subbatch4/LIDC-IDRI-0356/1277.png
+GT Mask: /home/wenting/zr/wt_dataset/LIDC_IDRI/img_complex_fb_256_pseudomask_10ch/LIDC-IDRI-0356/1277.npz
+
+------------------------------------------------------------
+Channel Name                       Dice        IoU
+------------------------------------------------------------
+0     Lung_Left                0.9214     0.8542
+1     Lung_Right               0.9298     0.8688
+2     Heart                    0.9354     0.8786
+3     Aorta                    0.8328     0.7135
+4     Liver                    0.9163     0.8455
+5     Stomach                  0.5532     0.3824
+6     Trachea                  0.6887     0.5252
+7     Ribs                     0.7287     0.5732
+8     Vertebrae                0.8463     0.7336
+9     Upper_Skeleton           0.5842     0.4127
+------------------------------------------------------------
+AVG                            0.7937     0.6788
+============================================================

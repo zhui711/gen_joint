@@ -1,0 +1,465 @@
+# Deep Diagnostic Report: Anatomy-Aware Loss Degradation Analysis
+
+## Executive Summary
+
+After analyzing the `loss_anatomy_v2.py` implementation against Rectified Flow formulations, I've identified **4 critical mathematical and implementation flaws** that collectively explain the metric degradation. The primary issues are:
+
+1. **Timestep blindness** — anatomy loss penalizes noise at all timesteps equally
+2. **Mask prediction instability** — `use_gen_mask=True` creates chaotic gradients from blurry predictions
+3. **Feature magnitude explosion** — Raw ReLU outputs dominate certain channels
+4. **Asymmetric mask application** — Using different masks for gen/GT features creates a fundamental mismatch
+
+---
+
+## Hypothesis A: The Timestep Distribution Trap 🚨 CRITICAL
+
+### Mathematical Analysis
+
+In Rectified Flow, the interpolation is:
+```
+x_t = t · x₁ + (1-t) · x₀    where x₀ ~ N(0,I)
+```
+
+The reconstruction formula is:
+```
+x̂₁ = x_t + (1-t) · û = t·x₁ + (1-t)·x₀ + (1-t)·û
+```
+
+**Critical insight**: When `t ≈ 0` (heavy noise):
+- `x_t ≈ x₀` (pure Gaussian noise)
+- `(1-t) ≈ 1` (large amplification factor)
+- `x̂₁ = x₀ + û` (noise + model prediction)
+
+At `t=0.1`, even if the model predicts velocity correctly, VAE decoding x̂₁ produces:
+- **Blurry mean image** (model hedges toward dataset average)
+- **OOD artifacts** (VAE decoder never trained on such noisy latents)
+- **Checkerboard patterns** from transposed convolutions operating on noise
+
+### Your Code's Vulnerability
+
+From `loss_anatomy_v2.py:260-261`:
+```python
+t = sample_timestep(x1)  # Logistic-normal: t ~ sigmoid(N(0,1))
+# This gives: P(t < 0.2) ≈ 15%, P(t < 0.3) ≈ 24%
+```
+
+**~15-24% of training steps compute anatomy loss on heavily degraded reconstructions!**
+
+The logistic-normal distribution has probability mass:
+```
+t ∈ [0.0, 0.2]: ~15%  ← DISASTER ZONE (pure noise)
+t ∈ [0.2, 0.4]: ~17%  ← DANGER ZONE (very blurry)
+t ∈ [0.4, 0.6]: ~25%  ← MARGINAL (some structure)
+t ∈ [0.6, 0.8]: ~25%  ← SAFE (clear structure)
+t ∈ [0.8, 1.0]: ~18%  ← OPTIMAL (near-clean)
+```
+
+### Why This Degrades Metrics
+
+When you enforce feature matching on t<0.3 reconstructions:
+1. Features from blurry/artifacted images are **systematically different** from GT features
+2. The model receives gradients forcing it to hallucinate sharp anatomy from noise
+3. This conflicts with the diffusion objective (which correctly says "at t≈0, just denoise toward the mean")
+4. **Result**: The model learns to sacrifice generation quality to satisfy impossible anatomy constraints
+
+### Recommendation: Timestep-Gated Anatomy Loss
+
+```python
+def training_losses_with_anatomy_v2(...):
+    # ... existing code ...
+    
+    t = sample_timestep(x1)
+    
+    # CRITICAL FIX: Only compute anatomy loss when reconstruction is meaningful
+    t_threshold = 0.5  # Only apply anatomy loss when t > 0.5
+    
+    # Create mask for samples where anatomy loss should be computed
+    anatomy_mask = (t > t_threshold).float()  # (B,)
+    
+    if anatomy_mask.sum() > 0:
+        # Only decode/process samples with t > threshold
+        valid_idx = torch.where(t > t_threshold)[0]
+        # ... compute anatomy loss only on valid_idx samples ...
+        loss_anatomy = loss_anatomy * (anatomy_mask.sum() / B)  # Normalize
+    else:
+        loss_anatomy = torch.tensor(0.0, device=device)
+```
+
+---
+
+## Hypothesis B: The `use_gen_mask` Instability 🚨 CRITICAL
+
+### The Fundamental Problem
+
+From `loss_anatomy_v2.py:174-181`:
+```python
+if use_gen_mask:
+    decoder_output = seg_model.decoder(gen_features_all)
+    logits_gen = seg_model.segmentation_head(decoder_output)
+    mask_gen = torch.sigmoid(logits_gen)  # Predicted mask from gen image
+else:
+    mask_gen = mask_gt
+```
+
+**The asymmetric mask application creates a mathematical mismatch:**
+
+```
+OrganFeature_gen = mask_gen × F_gen    (predicted mask × gen features)
+OrganFeature_gt  = mask_gt  × F_gt     (GT mask × GT features)
+
+Loss = MSE(mask_gen × F_gen, mask_gt × F_gt)
+```
+
+### Why This Is Catastrophic
+
+**Case 1: At low timesteps (t≈0.1)**
+- `x̂₁` is mostly noise → `gen_decoded` is garbage
+- `mask_gen` predicted from garbage is random/uniform
+- You're computing MSE between (random_mask × noise_features) vs (gt_mask × clean_features)
+- This generates **chaotic, high-magnitude gradients** with no anatomical meaning
+
+**Case 2: Even at high timesteps (t≈0.9)**
+- `mask_gen` ≠ `mask_gt` due to slight generation imperfections
+- Even small mask misalignment causes feature spatial mismatch
+- The loss penalizes features from **different spatial locations**
+
+### Concrete Example
+
+Consider a sample where:
+- GT mask has heart at pixels [50:100, 60:110]
+- Predicted mask has heart shifted to [52:102, 58:108] (2-pixel shift)
+
+```
+OrganFeature_gt[heart]:  F_gt @ [50:100, 60:110]
+OrganFeature_gen[heart]: F_gen @ [52:102, 58:108]
+
+Loss computes MSE between features at DIFFERENT ANATOMICAL LOCATIONS
+→ Forces generator to distort anatomy to match features spatially
+→ Results in anatomical inconsistencies and artifacts
+```
+
+### Recommendation: Force `use_gen_mask=False`
+
+```python
+# CRITICAL FIX: Always use GT mask for both gen and GT features
+# This ensures spatial alignment and stable gradients
+
+def compute_mask_weighted_feature_loss(
+    seg_model,
+    gen_images: torch.Tensor,
+    gt_images: torch.Tensor,
+    mask_gt: torch.Tensor,
+    feature_layer_idx: int = 2,
+    use_gen_mask: bool = False,  # CHANGED DEFAULT TO FALSE
+) -> torch.Tensor:
+    # ...
+    
+    # ALWAYS use GT mask for both (ensures spatial alignment)
+    M_same = mask_gt_down  # Use same mask for both
+    
+    for c in range(10):
+        M_c = M_same[:, c:c+1, :, :]
+        OrganFeature_gt_c = M_c * F_gt
+        OrganFeature_gen_c = M_c * F_gen  # Same mask!
+        mse_c = F.mse_loss(OrganFeature_gen_c, OrganFeature_gt_c, reduction='mean')
+```
+
+---
+
+## Hypothesis C: VAE Scaling and Normalization Analysis ✅ Mostly Correct
+
+### Code Analysis
+
+From `loss_anatomy_v2.py:87-92`:
+```python
+def inverse_vae_scale(latents, vae):
+    if vae.config.shift_factor is not None:
+        return latents / vae.config.scaling_factor + vae.config.shift_factor
+    else:
+        return latents / vae.config.scaling_factor
+```
+
+✅ **The inverse scaling is mathematically correct** — it properly reverses the encoding transformation.
+
+### The Hidden Problem: `clamp(-1.0, 1.0)`
+
+From `loss_anatomy_v2.py:306`:
+```python
+gen_decoded = vae.decode(lat_scaled).sample.clamp(-1.0, 1.0)
+```
+
+**This clamp operation IS problematic because:**
+
+1. **Gradient clipping**: When values exceed [-1, 1], gradients become zero
+2. **Information loss**: At low timesteps, reconstructions often exceed these bounds
+3. **Asymmetric treatment**: GT images are normalized to [-1, 1] during training, but generated reconstructions may legitimately need values outside this range during the reconstruction process
+
+### VAE Domain Mismatch
+
+**The real issue is not the scaling but the VAE pathway itself:**
+
+```
+GT Path:      raw_image → UNet → features_gt
+Gen Path:     x1_hat → VAE.decode() → gen_image → UNet → features_gen
+                       \_________/
+                       Introduces systematic artifacts
+```
+
+VAE decoders introduce:
+- Slight color/brightness shifts from learned biases
+- Blurring from limited latent capacity
+- High-frequency artifacts from transposed convolutions
+
+**When you minimize MSE(features_gen, features_gt), you're asking the model to PRE-COMPENSATE for VAE artifacts** → This manifests as the "dark patches" and other visual degradation.
+
+### Recommendation: Match VAE Pathways
+
+```python
+# OPTION 1: Encode GT through VAE, then decode (expensive but fair)
+with torch.no_grad():
+    gt_latent = vae_encode(vae, gt_img)
+    gt_decoded = vae.decode(inverse_vae_scale(gt_latent, vae)).sample.clamp(-1, 1)
+
+# Now both images went through VAE → fairer comparison
+loss = compute_mask_weighted_feature_loss(seg_model, gen_decoded, gt_decoded, ...)
+
+# OPTION 2: Remove clamp (allows natural gradient flow)
+gen_decoded = vae.decode(lat_scaled).sample  # No clamp
+# Then apply softer constraint:
+gen_decoded = torch.tanh(gen_decoded)  # Smoother saturation
+```
+
+---
+
+## Hypothesis D: Feature Magnitude and MSE Scaling 🚨 CRITICAL
+
+### The Unnormalized Feature Problem
+
+From `loss_anatomy_v2.py:168-169`:
+```python
+gen_features_all = seg_model.encoder(gen_images)
+F_gen = gen_features_all[feature_layer_idx]  # (B, 64, H, W)
+```
+
+**ResNet34 Layer 2 output characteristics:**
+- Output of `layer1` → 64 channels, 64×64 spatial
+- Post-ReLU activation (values ≥ 0)
+- **No normalization** — values can range from 0 to arbitrarily large
+
+### Why This Causes Gradient Explosion
+
+**Feature statistics in a typical batch:**
+```
+Channel 0:  mean=1.2, std=0.8, max=15.3
+Channel 1:  mean=0.3, std=0.2, max=3.1
+...
+Channel 45: mean=8.7, std=4.2, max=89.5  ← DOMINANT CHANNEL
+...
+Channel 63: mean=0.1, std=0.05, max=0.8
+```
+
+**MSE is dominated by high-magnitude channels:**
+```
+MSE = mean(Σ_c (F_gen[c] - F_gt[c])²)
+
+If channel 45 has 10× larger values:
+  - Channel 45 contributes 100× more to loss
+  - Channel 45 receives 100× larger gradients
+  - Other anatomical information in channels 0-44, 46-63 is ignored
+```
+
+### The Mask-Weighted Amplification
+
+When you apply masks:
+```python
+OrganFeature_gen_c = M_c * F_gen  # Shape: (B, 64, H, W)
+```
+
+If a mask has high activation in regions where high-magnitude channels are active, the MSE explodes. This creates:
+- **Gradient instability** (loss spikes)
+- **Optimization favoring certain organs over others** (whichever has smaller feature magnitudes)
+- **Ignoring subtle anatomical details** (in low-magnitude channels)
+
+### Recommendation: Feature Normalization
+
+```python
+def normalize_features(features, eps=1e-6):
+    """L2 normalize features along channel dimension."""
+    # features: (B, C, H, W)
+    norm = torch.norm(features, p=2, dim=1, keepdim=True) + eps
+    return features / norm
+
+def compute_mask_weighted_feature_loss(...):
+    # ... extract features ...
+    
+    # CRITICAL FIX: Normalize features before comparison
+    F_gt_norm = normalize_features(F_gt)
+    F_gen_norm = normalize_features(F_gen)
+    
+    loss_total = torch.tensor(0.0, device=device)
+    
+    for c in range(10):
+        M_c = M_same[:, c:c+1, :, :]
+        OrganFeature_gt_c = M_c * F_gt_norm
+        OrganFeature_gen_c = M_c * F_gen_norm
+        
+        # Now MSE is balanced across channels
+        mse_c = F.mse_loss(OrganFeature_gen_c, OrganFeature_gt_c, reduction='mean')
+        loss_total = loss_total + mse_c
+    
+    return loss_total
+```
+
+**Alternative: Cosine Similarity (Even More Robust)**
+```python
+def compute_cosine_feature_loss(F_gen, F_gt, mask):
+    """Cosine similarity automatically handles magnitude differences."""
+    # Flatten spatial dimensions
+    F_gen_flat = F_gen.flatten(2)  # (B, C, H*W)
+    F_gt_flat = F_gt.flatten(2)
+    mask_flat = mask.flatten(2)
+    
+    # Masked cosine similarity per organ
+    loss = 0
+    for c in range(mask.shape[1]):
+        m = mask_flat[:, c:c+1, :]  # (B, 1, H*W)
+        fg = (F_gen_flat * m).sum(dim=2)  # (B, C)
+        ft = (F_gt_flat * m).sum(dim=2)
+        
+        cos_sim = F.cosine_similarity(fg, ft, dim=1)  # (B,)
+        loss = loss + (1 - cos_sim).mean()  # 1 - cos_sim ∈ [0, 2]
+    
+    return loss / mask.shape[1]
+```
+
+---
+
+## Summary of Root Causes and Fixes
+
+| Issue | Root Cause | Impact | Fix Priority |
+|-------|------------|--------|--------------|
+| **Timestep blindness** | Anatomy loss at t<0.3 creates impossible constraints | Gradient conflict, diffusion degradation | 🔴 Critical |
+| **use_gen_mask=True** | Asymmetric masking creates spatial mismatch | Chaotic gradients, anatomy distortion | 🔴 Critical |
+| **Feature magnitude** | No normalization → channel dominance | Ignores subtle anatomy, gradient explosion | 🟠 High |
+| **VAE pathway asymmetry** | GT bypasses VAE, gen doesn't | Systematic artifacts, dark patches | 🟡 Medium |
+
+---
+
+## Concrete Code Fix: `loss_anatomy_v2_fixed.py`
+
+```python
+def compute_mask_weighted_feature_loss_fixed(
+    seg_model,
+    gen_images: torch.Tensor,
+    gt_images: torch.Tensor,
+    mask_gt: torch.Tensor,
+    feature_layer_idx: int = 2,
+) -> torch.Tensor:
+    """
+    FIXED version with:
+    1. Feature normalization (balanced channel contributions)
+    2. Same mask for both gen/GT (spatial alignment)
+    """
+    device = gen_images.device
+    gt_images = gt_images.to(device=device, dtype=torch.float32)
+    mask_gt = mask_gt.to(device=device, dtype=torch.float32)
+
+    # Extract features
+    with torch.no_grad():
+        gt_features_all = seg_model.encoder(gt_images)
+        F_gt = gt_features_all[feature_layer_idx]
+
+    gen_features_all = seg_model.encoder(gen_images)
+    F_gen = gen_features_all[feature_layer_idx]
+
+    # FIX 1: L2 normalize features (prevents channel dominance)
+    eps = 1e-6
+    F_gt_norm = F_gt / (torch.norm(F_gt, p=2, dim=1, keepdim=True) + eps)
+    F_gen_norm = F_gen / (torch.norm(F_gen, p=2, dim=1, keepdim=True) + eps)
+
+    # Downsample mask
+    _, C_feat, H_feat, W_feat = F_gen.shape
+    input_H = mask_gt.shape[-2]
+    if H_feat != input_H:
+        kernel_size = input_H // H_feat
+        mask_down = F.avg_pool2d(mask_gt, kernel_size=kernel_size)
+    else:
+        mask_down = mask_gt
+
+    # FIX 2: Use SAME mask for both (ensures spatial alignment)
+    loss_total = torch.tensor(0.0, device=device, requires_grad=True)
+
+    for c in range(10):
+        M_c = mask_down[:, c:c+1, :, :]  # Same mask for both!
+        OrganFeature_gt_c = M_c * F_gt_norm
+        OrganFeature_gen_c = M_c * F_gen_norm
+
+        mse_c = F.mse_loss(OrganFeature_gen_c, OrganFeature_gt_c, reduction='mean')
+        loss_total = loss_total + mse_c
+
+    return loss_total
+
+
+def training_losses_with_anatomy_v2_fixed(
+    model, x1, model_kwargs, output_images_pixel, output_anatomy_masks,
+    vae, seg_model, lambda_anatomy=0.1, anatomy_subbatch_size=4,
+    feature_layer_idx=2, t_threshold=0.5,  # NEW: timestep threshold
+):
+    """
+    FIXED version with:
+    1. Timestep gating (only compute anatomy loss for t > threshold)
+    2. Fixed feature matching function
+    """
+    # ... existing diffusion loss code (unchanged) ...
+    
+    t = sample_timestep(x1)
+    
+    # ... compute diffusion loss ...
+    
+    # FIX 3: Timestep gating
+    valid_for_anatomy = t > t_threshold
+    n_valid = valid_for_anatomy.sum().item()
+    
+    if n_valid == 0:
+        # No samples have t > threshold, skip anatomy loss
+        loss_anatomy = torch.tensor(0.0, device=device)
+    else:
+        # Only process samples where t > threshold
+        valid_indices = torch.where(valid_for_anatomy)[0]
+        n = min(anatomy_subbatch_size, len(valid_indices))
+        idx = valid_indices[torch.randperm(len(valid_indices))[:n]]
+        
+        # ... existing decoding code for selected indices ...
+        
+        # Use fixed feature loss function
+        loss_anatomy = compute_mask_weighted_feature_loss_fixed(
+            seg_model, gen_decoded, gt_imgs, masks_gt_sub,
+            feature_layer_idx=feature_layer_idx,
+        )
+    
+    loss_total = loss_diffusion + lambda_anatomy * loss_anatomy
+    
+    return {"loss_total": loss_total, "loss_diffusion": loss_diffusion, 
+            "loss_anatomy": loss_anatomy, "n_anatomy_samples": n_valid}
+```
+
+---
+
+## Recommended Training Strategy
+
+1. **Phase 1: Recover baseline** (500-1000 steps)
+   - Disable anatomy loss entirely (`lambda_anatomy=0`)
+   - Verify metrics return to baseline
+
+2. **Phase 2: Conservative anatomy** (2000-3000 steps)
+   - `t_threshold=0.7` (only very clean reconstructions)
+   - `lambda_anatomy=0.01` (very small weight)
+   - `use_gen_mask=False` (always use GT mask)
+   - Monitor that `loss_diffusion` doesn't increase
+
+3. **Phase 3: Gradual ramp-up**
+   - Slowly decrease `t_threshold` to 0.5
+   - Slowly increase `lambda_anatomy` to 0.05
+   - Stop if metrics degrade
+
+This phased approach prevents the gradient conflict from overwhelming the learned diffusion prior

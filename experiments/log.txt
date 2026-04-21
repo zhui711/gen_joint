@@ -1,0 +1,40 @@
+[[34m2026-04-13 00:19:02[0m] Downloaded model to /home/wenting/.cache/huggingface/hub/models--Shitao--OmniGen-v1/snapshots/58e249c7c7634423c0ba41c34a774af79aa87889
+[[34m2026-04-13 00:19:02[0m] Downloaded model to /home/wenting/.cache/huggingface/hub/models--Shitao--OmniGen-v1/snapshots/58e249c7c7634423c0ba41c34a774af79aa87889
+[[34m2026-04-13 00:19:02[0m] Downloaded model to /home/wenting/.cache/huggingface/hub/models--Shitao--OmniGen-v1/snapshots/58e249c7c7634423c0ba41c34a774af79aa87889
+[[34m2026-04-13 00:19:03[0m] Experiment directory created at ./experiments
+[[34m2026-04-13 00:19:03[0m] Downloaded model to /home/wenting/.cache/huggingface/hub/models--Shitao--OmniGen-v1/snapshots/58e249c7c7634423c0ba41c34a774af79aa87889
+[[34m2026-04-13 00:19:52[0m] Loading segmentation model from /home/wenting/zr/Segmentation/checkpoints/train_Seg/best_anatomy_model.pth
+[[34m2026-04-13 00:19:52[0m] Segmentation model loaded. lambda_anatomy=0.1, subbatch=16
+[[34m2026-04-13 00:19:54[0m] Loading LoRA adapter weights from /home/wenting/zr/gen_code/results/cxr_finetune_lora/checkpoints/0030000/
+[[34m2026-04-13 00:19:54[0m] Optimizer will be created fresh (no momentum transfer).
+[[34m2026-04-13 00:19:54[0m] Loaded 128 LoRA parameter tensors.
+[[34m2026-04-13 00:19:54[0m] Dataset contains 1,308,627
+[[34m2026-04-13 00:19:57[0m] Training for 1 epochs...
+[[34m2026-04-13 00:19:57[0m] Beginning epoch 0...
+[[34m2026-04-13 00:20:19[0m] (step=0000001) Loss: 0.5299 (diff=0.4419, anat=0.8796), Steps/Sec: 0.04, Epoch: 0.00, LR: 2.0000000000000002e-07
+[[34m2026-04-13 00:20:38[0m] (step=0000002) Loss: 0.5495 (diff=0.4574, anat=0.9210), Steps/Sec: 0.05, Epoch: 0.00, LR: 4.0000000000000003e-07
+[[34m2026-04-13 00:20:58[0m] (step=0000003) Loss: 0.5325 (diff=0.4502, anat=0.8236), Steps/Sec: 0.05, Epoch: 0.00, LR: 6.000000000000001e-07
+[[34m2026-04-13 00:21:17[0m] (step=0000004) Loss: 0.5238 (diff=0.4337, anat=0.9011), Steps/Sec: 0.05, Epoch: 0.00, LR: 8.000000000000001e-07
+[[34m2026-04-13 00:21:37[0m] (step=0000005) Loss: 0.5250 (diff=0.4339, anat=0.9111), Steps/Sec: 0.05, Epoch: 0.00, LR: 1.0000000000000002e-06
+[[34m2026-04-13 00:21:57[0m] (step=0000006) Loss: 0.5405 (diff=0.4547, anat=0.8583), Steps/Sec: 0.05, Epoch: 0.00, LR: 1.2000000000000002e-06
+[[34m2026-04-13 00:22:18[0m] (step=0000007) Loss: 0.5213 (diff=0.4276, anat=0.9371), Steps/Sec: 0.05, Epoch: 0.00, LR: 1.4000000000000001e-06
+[[34m2026-04-13 00:22:38[0m] (step=0000008) Loss: 0.5223 (diff=0.4392, anat=0.8311), Steps/Sec: 0.05, Epoch: 0.00, LR: 1.6000000000000001e-06
+[[34m2026-04-13 00:22:58[0m] (step=0000009) Loss: 0.5492 (diff=0.4626, anat=0.8656), Steps/Sec: 0.05, Epoch: 0.00, LR: 1.8e-06
+[[34m2026-04-13 00:23:18[0m] (step=0000010) Loss: 0.5453 (diff=0.4561, anat=0.8927), Steps/Sec: 0.05, Epoch: 0.00, LR: 2.0000000000000003e-06
+[[34m2026-04-13 00:23:39[0m] (step=0000011) Loss: 0.5260 (diff=0.4386, anat=0.8737), Steps/Sec: 0.05, Epoch: 0.00, LR: 2.2e-06
+[[34m2026-04-13 00:23:59[0m] (step=0000012) Loss: 0.5384 (diff=0.4495, anat=0.8890), Steps/Sec: 0.05, Epoch: 0.00, LR: 2.4000000000000003e-06
+[[34m2026-04-13 00:24:19[0m] (step=0000013) Loss: 0.5238 (diff=0.4331, anat=0.9065), Steps/Sec: 0.05, Epoch: 0.00, LR: 2.6e-06
+[[34m2026-04-13 00:24:39[0m] (step=0000014) Loss: 0.5350 (diff=0.4503, anat=0.8470), Steps/Sec: 0.05, Epoch: 0.00, LR: 2.8000000000000003e-06
+[[34m2026-04-13 00:25:00[0m] (step=0000015) Loss: 0.5321 (diff=0.4423, anat=0.8979), Steps/Sec: 0.05, Epoch: 0.00, LR: 3e-06
+[[34m2026-04-13 00:25:20[0m] (step=0000016) Loss: 0.5298 (diff=0.4475, anat=0.8234), Steps/Sec: 0.05, Epoch: 0.00, LR: 3.2000000000000003e-06
+[[34m2026-04-13 00:25:40[0m] (step=0000017) Loss: 0.5433 (diff=0.4525, anat=0.9087), Steps/Sec: 0.05, Epoch: 0.00, LR: 3.4000000000000005e-06
+[[34m2026-04-13 00:26:00[0m] (step=0000018) Loss: 0.5261 (diff=0.4393, anat=0.8672), Steps/Sec: 0.05, Epoch: 0.00, LR: 3.6e-06
+[[34m2026-04-13 00:26:20[0m] (step=0000019) Loss: 0.5373 (diff=0.4465, anat=0.9083), Steps/Sec: 0.05, Epoch: 0.00, LR: 3.8e-06
+[[34m2026-04-13 00:26:41[0m] (step=0000020) Loss: 0.5331 (diff=0.4482, anat=0.8491), Steps/Sec: 0.05, Epoch: 0.00, LR: 4.000000000000001e-06
+[[34m2026-04-13 00:27:01[0m] (step=0000021) Loss: 0.5381 (diff=0.4522, anat=0.8587), Steps/Sec: 0.05, Epoch: 0.00, LR: 4.2000000000000004e-06
+[[34m2026-04-13 00:27:21[0m] (step=0000022) Loss: 0.5294 (diff=0.4424, anat=0.8701), Steps/Sec: 0.05, Epoch: 0.00, LR: 4.4e-06
+[[34m2026-04-13 00:27:41[0m] (step=0000023) Loss: 0.5347 (diff=0.4465, anat=0.8815), Steps/Sec: 0.05, Epoch: 0.00, LR: 4.6e-06
+[[34m2026-04-13 00:28:01[0m] (step=0000024) Loss: 0.5235 (diff=0.4394, anat=0.8420), Steps/Sec: 0.05, Epoch: 0.00, LR: 4.800000000000001e-06
+[[34m2026-04-13 00:28:22[0m] (step=0000025) Loss: 0.5292 (diff=0.4390, anat=0.9021), Steps/Sec: 0.05, Epoch: 0.00, LR: 5e-06
+[[34m2026-04-13 00:28:42[0m] (step=0000026) Loss: 0.5409 (diff=0.4526, anat=0.8827), Steps/Sec: 0.05, Epoch: 0.01, LR: 5.2e-06
+[[34m2026-04-13 00:29:02[0m] (step=0000027) Loss: 0.5384 (diff=0.4482, anat=0.9023), Steps/Sec: 0.05, Epoch: 0.01, LR: 5.4e-06

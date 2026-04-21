@@ -1,0 +1,4 @@
+Instruction: <img><|image_1|></img> Edit the view using delta pose: d_theta=-0.0247 rad, sin(d_azimuth)=0.0269, cos(d_azimuth)=0.9996.
+Source: /raid/home/CAMCA/hj880/wt/dataset/cxr_sythn/img_complex_fb_256/LIDC-IDRI-0251/0000.png
+Target: /raid/home/CAMCA/hj880/wt/dataset/cxr_sythn/img_complex_fb_256/LIDC-IDRI-0251/0001.png
+Pred: /raid/home/CAMCA/hj880/wt/dataset/cxr_sythn/cxr_omnigen_results_mini/LIDC-IDRI-0251/0001.png
