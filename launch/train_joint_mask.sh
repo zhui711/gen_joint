@@ -2,10 +2,12 @@
 # =============================================================================
 # Joint Image-Mask Co-Generation Training Launch Script
 # =============================================================================
-# This script launches the joint training with:
+# This script launches production joint training with:
 #   - Expanded LoRA (attention + MLP) at rank 32
 #   - Mask latent co-generation with profiled lambda_mask=0.25
 #   - Proper checkpointing of both LoRA and mask modules
+#   - Explicit 8-GPU Accelerate/DDP launch
+#   - Training from the base OmniGen model, not an old LoRA checkpoint
 # =============================================================================
 
 set -e
@@ -15,32 +17,37 @@ MODEL_PATH="Shitao/OmniGen-v1"
 JSON_FILE="/home/wenting/zr/wt_dataset/LIDC_IDRI/anno/cxr_synth_anno_mask_train.jsonl"
 RESULTS_DIR="results/joint_mask_cogen"
 
-# --- Optional: Resume from previous checkpoint ---
-# Uncomment and set these to resume training:
-# LORA_RESUME_PATH="results/joint_mask_cogen/checkpoints/0010000/"
-# MASK_MODULES_RESUME="results/joint_mask_cogen/checkpoints/0010000/mask_modules.bin"
-
 # --- Optional: Pretrained mask autoencoder ---
 # MASK_AE_CKPT="results/mask_ae_pretrain/mask_autoencoder.pt"
 
-# --- Optional: Resume from base LoRA (Plan 1 checkpoint) ---
-# LORA_RESUME_PATH="/home/wenting/zr/gen_code/results/cxr_finetune_lora/checkpoints/0030000/"
+# --- Optional: Resume from a joint-mask checkpoint only ---
+# Keep unset for from-scratch training from the base OmniGen model.
+# LORA_RESUME_PATH="results/joint_mask_cogen/checkpoints/0010000/"
+# MASK_MODULES_RESUME="results/joint_mask_cogen/checkpoints/0010000/mask_modules.bin"
 
 # --- Hyperparameters ---
-BATCH_SIZE=4
-GRAD_ACCUM=4
-LR=2e-5
+BATCH_SIZE=32
+GRAD_ACCUM=1
+LR=3e-4
+NUM_WORKERS=8 
+
 LORA_RANK=32
 LORA_ALPHA=32
 LORA_TARGETS="qkv_proj o_proj gate_up_proj down_proj"
 LAMBDA_MASK=0.25
 MASK_LATENT_CH=4
 MAX_TRAIN_STEPS=100000
-LOG_EVERY=50
-CKPT_EVERY=5000
+LOG_EVERY=1
+CKPT_EVERY=500
+
+# --- Distributed launch ---
+NUM_GPUS=8
 
 # --- Build command ---
 CMD="accelerate launch \
+    --multi_gpu \
+    --num_processes ${NUM_GPUS} \
+    --main_process_port 29500 \
     --mixed_precision bf16 \
     train_joint_mask.py \
     --model_name_or_path ${MODEL_PATH} \
@@ -57,12 +64,14 @@ CMD="accelerate launch \
     --mask_latent_channels ${MASK_LATENT_CH} \
     --max_train_steps ${MAX_TRAIN_STEPS} \
     --keep_raw_resolution \
-    --max_image_size 256 \
-    --condition_dropout_prob 0.1 \
+    --max_image_size 1024 \
+    --max_input_length_limit 18000 \
+    --condition_dropout_prob 0.01 \
     --lr_scheduler constant \
     --lr_warmup_steps 500 \
     --log_every ${LOG_EVERY} \
     --ckpt_every ${CKPT_EVERY} \
+    --num_workers ${NUM_WORKERS} \
     --max_grad_norm 1.0 \
     --report_to tensorboard \
     --mixed_precision bf16"
