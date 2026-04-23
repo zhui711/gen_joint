@@ -6,6 +6,7 @@
 #   bash launch/test_joint_mask.sh
 #   bash launch/test_joint_mask.sh --skip_generation
 #   bash launch/test_joint_mask.sh --skip_eval
+#   bash launch/test_joint_mask.sh --max_samples 100
 # =============================================================================
 
 set -euo pipefail
@@ -13,6 +14,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
+PYTHON_BIN="${PYTHON_BIN:-python}"
 
 # --- Paths ---
 MODEL_PATH="Shitao/OmniGen-v1"
@@ -59,4 +61,4 @@ PY_ARGS=(
     --max_image_size "${MAX_IMAGE_SIZE}"
 )
 
-python test_joint_mask.py "${PY_ARGS[@]}" "$@"
+"${PYTHON_BIN}" test_joint_mask.py "${PY_ARGS[@]}" "$@"

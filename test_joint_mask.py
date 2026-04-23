@@ -226,7 +226,9 @@ def build_generation_groups(batch: List[Dict], args) -> List[Tuple[int, int, boo
         grouped_batches[target_size].append(item)
 
     return [
-        (height, width, True, subbatch)
+        # We pass the processed target size explicitly for grouped batches.
+        # `use_input_image_size_as_output=True` only supports a single sample.
+        (height, width, False, subbatch)
         for (height, width), subbatch in grouped_batches.items()
     ]
 
@@ -706,9 +708,6 @@ def main():
     args = parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
     setup_logging(args.output_dir)
-
-    if args.max_image_size % 16 != 0:
-        raise ValueError("--max_image_size must be divisible by 16.")
 
     # ---- Load data ----
     print(f"Loading JSONL from {args.jsonl_path} ...")
