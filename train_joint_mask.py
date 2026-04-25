@@ -330,6 +330,7 @@ def main(args):
         logger.info(f"LoRA targets: {args.lora_target_modules}")
         logger.info(f"LoRA rank={args.lora_rank}, alpha={args.lora_alpha}")
         logger.info(f"lambda_mask={args.lambda_mask}")
+        logger.info(f"lambda_recon={args.lambda_recon}")
 
     ema = None
     if args.use_ema:
@@ -443,6 +444,7 @@ def main(args):
     running_loss = 0
     running_loss_img = 0
     running_loss_mask = 0
+    running_loss_recon = 0
     start_time = time()
 
     if accelerator.is_main_process:
@@ -510,12 +512,16 @@ def main(args):
                     x1_mask=x1_mask,
                     model_kwargs=model_kwargs,
                     lambda_mask=args.lambda_mask,
+                    mask_decoder=mask_decoder,
+                    gt_mask_cont=mask_cont,
+                    lambda_recon=args.lambda_recon,
                 )
                 loss = loss_dict["loss"]
 
                 running_loss += loss.item()
                 running_loss_img += loss_dict["loss_img"].item()
                 running_loss_mask += loss_dict["loss_mask"].item()
+                running_loss_recon += loss_dict["loss_recon"].item()
 
                 accelerator.backward(loss)
                 if args.max_grad_norm is not None and accelerator.sync_gradients:
@@ -533,6 +539,7 @@ def main(args):
                         "training_loss_total": loss.item(),
                         "training_loss_img": loss_dict["loss_img"].item(),
                         "training_loss_mask": loss_dict["loss_mask"].item(),
+                        "training_loss_recon": loss_dict["loss_recon"].item(),
                     },
                     step=train_steps,
                 )
@@ -549,25 +556,30 @@ def main(args):
                     avg_loss = torch.tensor(running_loss / log_steps, device=device)
                     avg_loss_img = torch.tensor(running_loss_img / log_steps, device=device)
                     avg_loss_mask = torch.tensor(running_loss_mask / log_steps, device=device)
+                    avg_loss_recon = torch.tensor(running_loss_recon / log_steps, device=device)
                     if dist.is_available() and dist.is_initialized():
                         dist.all_reduce(avg_loss, op=dist.ReduceOp.SUM)
                         dist.all_reduce(avg_loss_img, op=dist.ReduceOp.SUM)
                         dist.all_reduce(avg_loss_mask, op=dist.ReduceOp.SUM)
+                        dist.all_reduce(avg_loss_recon, op=dist.ReduceOp.SUM)
                     avg_loss = avg_loss.item() / accelerator.num_processes
                     avg_loss_img = avg_loss_img.item() / accelerator.num_processes
                     avg_loss_mask = avg_loss_mask.item() / accelerator.num_processes
+                    avg_loss_recon = avg_loss_recon.item() / accelerator.num_processes
 
                     if accelerator.is_main_process:
                         cur_lr = opt.param_groups[0]["lr"]
                         logger.info(
                             f"(step={global_step:07d}) "
-                            f"Loss: {avg_loss:.4f} (img={avg_loss_img:.4f}, mask={avg_loss_mask:.4f}), "
+                            f"Loss: {avg_loss:.4f} "
+                            f"(img={avg_loss_img:.4f}, mask={avg_loss_mask:.4f}, recon={avg_loss_recon:.4f}), "
                             f"Steps/Sec: {steps_per_sec:.2f}, Epoch: {train_steps / len(loader):.2f}, LR: {cur_lr}"
                         )
 
                     running_loss = 0
                     running_loss_img = 0
                     running_loss_mask = 0
+                    running_loss_recon = 0
                     log_steps = 0
                     start_time = time()
 
@@ -685,6 +697,15 @@ if __name__ == "__main__":
         type=float,
         default=0.25,
         help="Weight for the mask velocity loss.",
+    )
+    parser.add_argument(
+        "--lambda_recon",
+        type=float,
+        default=0.0,
+        help=(
+            "Optional weight for mask autoencoding reconstruction loss. "
+            "Set to 0.0 to exactly bypass MaskDecoder in the main joint loss."
+        ),
     )
     parser.add_argument(
         "--mask_ae_ckpt",

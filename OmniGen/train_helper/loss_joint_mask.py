@@ -7,7 +7,8 @@ This module implements the co-generation training loss for Plan 2:
   4. Compute noisy states for both image and mask latents.
   5. Run the joint model forward (predicts velocities for both).
   6. Compute MSE loss on predicted velocities vs GT velocities.
-  7. Return weighted combination: L_img + lambda_mask * L_mask.
+  7. Optionally add a lightweight reconstruction regularizer.
+  8. Return weighted combination: L_img + lambda_mask * L_mask + lambda_recon * L_recon.
 
 No frozen segmentation model is needed. No VAE decode in the loss path.
 """
@@ -42,6 +43,9 @@ def training_losses_joint_mask(
     x1_mask,
     model_kwargs,
     lambda_mask=0.5,
+    mask_decoder=None,
+    gt_mask_cont=None,
+    lambda_recon=0.0,
 ):
     """
     Joint rectified-flow loss for image and mask latents.
@@ -54,9 +58,12 @@ def training_losses_joint_mask(
         x1_mask: Mask-encoder output GT mask latent (B, 4, 32, 32).
         model_kwargs: Keyword arguments for the OmniGen forward pass.
         lambda_mask: Weight for the mask velocity loss.
+        mask_decoder: Optional MaskDecoder used for auxiliary reconstruction.
+        gt_mask_cont: Optional GT masks in [-1, 1], shape (B, 10, H, W).
+        lambda_recon: Weight for the optional reconstruction loss.
 
     Returns:
-        Dict with 'loss', 'loss_img', 'loss_mask'.
+        Dict with 'loss', 'loss_img', 'loss_mask', 'loss_recon'.
     """
     if model_kwargs is None:
         model_kwargs = {}
@@ -111,11 +118,26 @@ def training_losses_joint_mask(
     # Mask velocity loss
     loss_mask = mean_flat((pred_mask - ut_mask) ** 2).mean()
 
+    # Optional reconstruction loss.
+    #
+    # When lambda_recon == 0.0 we must remain mathematically equivalent to the
+    # current SOTA run, so we bypass MaskDecoder entirely.
+    if lambda_recon == 0.0:
+        loss_recon = loss_img.new_zeros(())
+    else:
+        if mask_decoder is None:
+            raise ValueError("mask_decoder must be provided when lambda_recon > 0.")
+        if gt_mask_cont is None:
+            raise ValueError("gt_mask_cont must be provided when lambda_recon > 0.")
+        recon_mask = mask_decoder(x1_mask)
+        loss_recon = F.mse_loss(recon_mask.float(), gt_mask_cont.float())
+
     # Combined loss
-    loss = loss_img + lambda_mask * loss_mask
+    loss = loss_img + lambda_mask * loss_mask + lambda_recon * loss_recon
 
     return {
         "loss": loss,
         "loss_img": loss_img,
         "loss_mask": loss_mask,
+        "loss_recon": loss_recon,
     }

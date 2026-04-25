@@ -1,0 +1,135 @@
+{
+  "status": "ok",
+  "mask_modules_path": "/home/wenting/zr/gen_code_plan2_1/results/mask_modules.bin",
+  "jsonl_path": "/home/wenting/zr/wt_dataset/LIDC_IDRI/anno/cxr_synth_anno_mask_train.jsonl",
+  "num_examples_requested": 64,
+  "num_steps": 300,
+  "batch_size": 16,
+  "loss_threshold": 0.05,
+  "timestamp": "2026-04-25 01:34:50",
+  "device": "cuda",
+  "num_examples_used": 64,
+  "latent_channels": 4,
+  "initial_full_subset_mse": 1.2807408273220062,
+  "final_full_subset_mse": 0.25717997550964355,
+  "best_batch_mse": 0.20189562439918518,
+  "elapsed_seconds": 5.678905487060547,
+  "option_a_viable": false,
+  "decision_rule": "final full-subset MSE < 0.05 => Option A viable",
+  "eval_history": [
+    {
+      "step": 0,
+      "full_subset_mse": 1.2807408273220062
+    },
+    {
+      "step": 1,
+      "full_subset_mse": 0.8049113601446152
+    },
+    {
+      "step": 50,
+      "full_subset_mse": 0.40128791332244873
+    },
+    {
+      "step": 100,
+      "full_subset_mse": 0.3272704556584358
+    },
+    {
+      "step": 150,
+      "full_subset_mse": 0.28066884726285934
+    },
+    {
+      "step": 200,
+      "full_subset_mse": 0.2470761202275753
+    },
+    {
+      "step": 250,
+      "full_subset_mse": 0.22337432950735092
+    },
+    {
+      "step": 300,
+      "full_subset_mse": 0.25717997550964355
+    }
+  ],
+  "train_loss_history_tail": [
+    {
+      "step": 281,
+      "batch_mse": 0.21745696663856506
+    },
+    {
+      "step": 282,
+      "batch_mse": 0.2133600264787674
+    },
+    {
+      "step": 283,
+      "batch_mse": 0.21038757264614105
+    },
+    {
+      "step": 284,
+      "batch_mse": 0.20439110696315765
+    },
+    {
+      "step": 285,
+      "batch_mse": 0.2121894359588623
+    },
+    {
+      "step": 286,
+      "batch_mse": 0.2098461240530014
+    },
+    {
+      "step": 287,
+      "batch_mse": 0.20749340951442719
+    },
+    {
+      "step": 288,
+      "batch_mse": 0.20189562439918518
+    },
+    {
+      "step": 289,
+      "batch_mse": 0.21115730702877045
+    },
+    {
+      "step": 290,
+      "batch_mse": 0.2071063369512558
+    },
+    {
+      "step": 291,
+      "batch_mse": 0.21190491318702698
+    },
+    {
+      "step": 292,
+      "batch_mse": 0.21388225257396698
+    },
+    {
+      "step": 293,
+      "batch_mse": 0.2317029982805252
+    },
+    {
+      "step": 294,
+      "batch_mse": 0.23092620074748993
+    },
+    {
+      "step": 295,
+      "batch_mse": 0.2440049946308136
+    },
+    {
+      "step": 296,
+      "batch_mse": 0.25953254103660583
+    },
+    {
+      "step": 297,
+      "batch_mse": 0.24140791594982147
+    },
+    {
+      "step": 298,
+      "batch_mse": 0.23337917029857635
+    },
+    {
+      "step": 299,
+      "batch_mse": 0.24489107728004456
+    },
+    {
+      "step": 300,
+      "batch_mse": 0.24628841876983643
+    }
+  ]
+}

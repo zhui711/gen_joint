@@ -1,0 +1,35 @@
+{
+  "status": "ok",
+  "timestamp": "2026-04-25 01:35:34",
+  "model_name_or_path": "Shitao/OmniGen-v1",
+  "jsonl_path": "/home/wenting/zr/wt_dataset/LIDC_IDRI/anno/cxr_synth_anno_mask_train.jsonl",
+  "image_path": "./",
+  "lora_path": null,
+  "mask_modules_path": "/home/wenting/zr/gen_code_plan2_1/results/mask_modules.bin",
+  "mask_modules_loaded": true,
+  "device": "cuda",
+  "weight_dtype": "torch.bfloat16",
+  "batch_meta": {
+    "dataset_size": 1308627,
+    "batch_size": 1,
+    "image_size": [
+      256,
+      256
+    ],
+    "num_mask_tokens": 256,
+    "sample_offset": 0
+  },
+  "loss_img_raw": 0.302734375,
+  "loss_flow_mask_raw": 1.046875,
+  "loss_recon_raw": 0.97265625,
+  "lambda_mask_current": 0.25,
+  "lambda_recon_recommended": 0.03112449799196787,
+  "weighted_recon_at_lambda": 0.0302734375,
+  "weighted_recon_to_img_ratio": 0.1,
+  "formula": "lambda_recon = 0.1 * L_img / L_recon",
+  "elapsed_seconds": 45.68576788902283,
+  "notes": [
+    "L_recon is computed in the decoder's native tanh space against masks mapped from {0,1} to [-1,1].",
+    "If no LoRA path is supplied, the image branch is the base OmniGen model."
+  ]
+}

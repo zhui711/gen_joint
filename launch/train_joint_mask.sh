@@ -61,6 +61,7 @@ CMD="accelerate launch \
     --lora_alpha ${LORA_ALPHA} \
     --lora_target_modules ${LORA_TARGETS} \
     --lambda_mask ${LAMBDA_MASK} \
+    --lambda_recon 0.0 \
     --mask_latent_channels ${MASK_LATENT_CH} \
     --max_train_steps ${MAX_TRAIN_STEPS} \
     --keep_raw_resolution \
