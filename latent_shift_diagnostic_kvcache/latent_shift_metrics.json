@@ -1,0 +1,70 @@
+{
+  "sample_id": "LIDC-IDRI-0657_0001",
+  "sample": {
+    "task_type": "image_edit",
+    "instruction": "<img><|image_1|></img> Edit the view using delta pose: d_theta=-0.0247 rad, sin(d_azimuth)=0.0269, cos(d_azimuth)=0.9996.",
+    "input_images": [
+      "/home/wenting/zr/wt_dataset/LIDC_IDRI/img_complex_fb_256/LIDC-IDRI-0657/0000.png"
+    ],
+    "output_image": "/home/wenting/zr/wt_dataset/LIDC_IDRI/img_complex_fb_256/LIDC-IDRI-0657/0001.png",
+    "output_mask": "/home/wenting/zr/wt_dataset/LIDC_IDRI/img_complex_fb_256_pseudomask_10ch/LIDC-IDRI-0657/0001.npz"
+  },
+  "results": {
+    "true": {
+      "stats": {
+        "min": -0.039473921060562134,
+        "max": 0.02228689193725586,
+        "mean": -0.0025026751682162285,
+        "std": 0.0062505267560482025
+      },
+      "grid_path": "latent_shift_diagnostic_kvcache/mask_true_recon_grid.png",
+      "union_path": "latent_shift_diagnostic_kvcache/mask_true_recon_union.png"
+    },
+    "cfg": {
+      "stats": {
+        "min": -3.671875,
+        "max": 3.4375,
+        "mean": 0.004615539684891701,
+        "std": 1.0062096118927002
+      },
+      "l2_to_true": 64.40266418457031,
+      "grid_path": "latent_shift_diagnostic_kvcache/mask_cfg_grid.png",
+      "union_path": "latent_shift_diagnostic_kvcache/mask_cfg_union.png",
+      "generated_path": "latent_shift_diagnostic_kvcache/generated_cfg.png"
+    },
+    "nocfg": {
+      "stats": {
+        "min": -3.671875,
+        "max": 3.4375,
+        "mean": 0.004615539684891701,
+        "std": 1.0062096118927002
+      },
+      "l2_to_true": 64.40266418457031,
+      "grid_path": "latent_shift_diagnostic_kvcache/mask_nocfg_grid.png",
+      "union_path": "latent_shift_diagnostic_kvcache/mask_nocfg_union.png",
+      "generated_path": "latent_shift_diagnostic_kvcache/generated_nocfg.png"
+    }
+  },
+  "config": {
+    "jsonl_path": "/home/wenting/zr/wt_dataset/LIDC_IDRI/anno/cxr_synth_anno_mask_train.jsonl",
+    "sample_id": null,
+    "model_path": "Shitao/OmniGen-v1",
+    "lora_path": "results/30000",
+    "mask_modules_path": "results/30000/mask_modules.bin",
+    "output_dir": "latent_shift_diagnostic_kvcache",
+    "mask_key": "mask",
+    "mask_latent_channels": 4,
+    "inference_steps": 50,
+    "cfg_guidance_scale": 2.5,
+    "cfg_img_guidance_scale": 2.0,
+    "nocfg_guidance_scale": 1.0,
+    "nocfg_img_guidance_scale": 1.0,
+    "seed": 42,
+    "max_image_size": 1024,
+    "mask_threshold": 0.0,
+    "device": "cuda:0",
+    "dtype": "torch.bfloat16",
+    "use_kv_cache": true,
+    "offload_kv_cache": false
+  }
+}
