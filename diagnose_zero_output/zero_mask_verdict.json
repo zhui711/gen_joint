@@ -1,0 +1,186 @@
+{
+  "sample_id": "LIDC-IDRI-0657_0001",
+  "weights": {
+    "final_layer": {
+      "present": true,
+      "param_count": 18929680,
+      "abs_sum": 148962.8758468628,
+      "state_keys": [
+        "linear.weight",
+        "linear.bias",
+        "adaLN_modulation.1.weight",
+        "adaLN_modulation.1.bias"
+      ]
+    },
+    "mask_final_layer": {
+      "present": true,
+      "param_count": 18929680,
+      "abs_sum": 0.0,
+      "state_keys": [
+        "linear.weight",
+        "linear.bias",
+        "adaLN_modulation.1.weight",
+        "adaLN_modulation.1.bias"
+      ]
+    },
+    "x_embedder": {
+      "present": true,
+      "param_count": 52224,
+      "abs_sum": 5047.685028076172,
+      "state_keys": [
+        "proj.weight",
+        "proj.bias"
+      ]
+    },
+    "mask_x_embedder": {
+      "present": true,
+      "param_count": 52224,
+      "abs_sum": 1081.38916015625,
+      "state_keys": [
+        "proj.weight",
+        "proj.bias"
+      ]
+    }
+  },
+  "mask_modules_keys": [
+    "mask_encoder.net.0.weight",
+    "mask_encoder.net.0.bias",
+    "mask_encoder.net.1.weight",
+    "mask_encoder.net.1.bias",
+    "mask_encoder.net.3.block.0.weight",
+    "mask_encoder.net.3.block.0.bias",
+    "mask_encoder.net.3.block.2.weight",
+    "mask_encoder.net.3.block.2.bias",
+    "mask_encoder.net.3.block.3.weight",
+    "mask_encoder.net.3.block.3.bias",
+    "mask_encoder.net.3.block.5.weight",
+    "mask_encoder.net.3.block.5.bias",
+    "mask_encoder.net.4.weight",
+    "mask_encoder.net.4.bias",
+    "mask_encoder.net.5.weight",
+    "mask_encoder.net.5.bias",
+    "mask_encoder.net.7.block.0.weight",
+    "mask_encoder.net.7.block.0.bias",
+    "mask_encoder.net.7.block.2.weight",
+    "mask_encoder.net.7.block.2.bias",
+    "mask_encoder.net.7.block.3.weight",
+    "mask_encoder.net.7.block.3.bias",
+    "mask_encoder.net.7.block.5.weight",
+    "mask_encoder.net.7.block.5.bias",
+    "mask_encoder.net.8.weight",
+    "mask_encoder.net.8.bias",
+    "mask_encoder.net.9.weight",
+    "mask_encoder.net.9.bias",
+    "mask_encoder.net.11.block.0.weight",
+    "mask_encoder.net.11.block.0.bias",
+    "mask_encoder.net.11.block.2.weight",
+    "mask_encoder.net.11.block.2.bias",
+    "mask_encoder.net.11.block.3.weight",
+    "mask_encoder.net.11.block.3.bias",
+    "mask_encoder.net.11.block.5.weight",
+    "mask_encoder.net.11.block.5.bias",
+    "mask_encoder.net.12.weight",
+    "mask_encoder.net.12.bias",
+    "mask_decoder.net.0.weight",
+    "mask_decoder.net.0.bias",
+    "mask_decoder.net.1.weight",
+    "mask_decoder.net.1.bias",
+    "mask_decoder.net.3.block.0.weight",
+    "mask_decoder.net.3.block.0.bias",
+    "mask_decoder.net.3.block.2.weight",
+    "mask_decoder.net.3.block.2.bias",
+    "mask_decoder.net.3.block.3.weight",
+    "mask_decoder.net.3.block.3.bias",
+    "mask_decoder.net.3.block.5.weight",
+    "mask_decoder.net.3.block.5.bias",
+    "mask_decoder.net.5.weight",
+    "mask_decoder.net.5.bias",
+    "mask_decoder.net.6.weight",
+    "mask_decoder.net.6.bias",
+    "mask_decoder.net.8.block.0.weight",
+    "mask_decoder.net.8.block.0.bias",
+    "mask_decoder.net.8.block.2.weight",
+    "mask_decoder.net.8.block.2.bias",
+    "mask_decoder.net.8.block.3.weight",
+    "mask_decoder.net.8.block.3.bias",
+    "mask_decoder.net.8.block.5.weight",
+    "mask_decoder.net.8.block.5.bias",
+    "mask_decoder.net.10.weight",
+    "mask_decoder.net.10.bias",
+    "mask_decoder.net.11.weight",
+    "mask_decoder.net.11.bias",
+    "mask_decoder.net.13.block.0.weight",
+    "mask_decoder.net.13.block.0.bias",
+    "mask_decoder.net.13.block.2.weight",
+    "mask_decoder.net.13.block.2.bias",
+    "mask_decoder.net.13.block.3.weight",
+    "mask_decoder.net.13.block.3.bias",
+    "mask_decoder.net.13.block.5.weight",
+    "mask_decoder.net.13.block.5.bias",
+    "mask_decoder.net.15.weight",
+    "mask_decoder.net.15.bias",
+    "mask_x_embedder.proj.weight",
+    "mask_x_embedder.proj.bias",
+    "mask_final_layer.linear.weight",
+    "mask_final_layer.linear.bias",
+    "mask_final_layer.adaLN_modulation.1.weight",
+    "mask_final_layer.adaLN_modulation.1.bias",
+    "image_modality_embed",
+    "mask_modality_embed"
+  ],
+  "forward_trace": {
+    "model_out_type": "joint",
+    "img_out": {
+      "shape": [
+        3,
+        4,
+        32,
+        32
+      ],
+      "std": 1.200600504875183,
+      "mean": -0.044038206338882446,
+      "abs_sum": 11515.169921875,
+      "min": -5.4375,
+      "max": 5.03125
+    },
+    "mask_out": {
+      "shape": [
+        3,
+        4,
+        32,
+        32
+      ],
+      "std": 0.0,
+      "mean": 0.0,
+      "abs_sum": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "pred_img": {
+      "shape": [
+        3,
+        4,
+        32,
+        32
+      ],
+      "std": 1.7687355279922485,
+      "mean": 0.05183619260787964,
+      "abs_sum": 16443.748046875,
+      "min": -8.375,
+      "max": 7.0625
+    },
+    "pred_mask": {
+      "shape": [
+        3,
+        4,
+        32,
+        32
+      ],
+      "std": 0.0,
+      "mean": 0.0,
+      "abs_sum": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    }
+  }
+}

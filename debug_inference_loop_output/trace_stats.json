@@ -1,0 +1,252 @@
+{
+  "sample_id": "LIDC-IDRI-0657_0001",
+  "sample": {
+    "task_type": "image_edit",
+    "instruction": "<img><|image_1|></img> Edit the view using delta pose: d_theta=-0.0247 rad, sin(d_azimuth)=0.0269, cos(d_azimuth)=0.9996.",
+    "input_images": [
+      "/home/wenting/zr/wt_dataset/LIDC_IDRI/img_complex_fb_256/LIDC-IDRI-0657/0000.png"
+    ],
+    "output_image": "/home/wenting/zr/wt_dataset/LIDC_IDRI/img_complex_fb_256/LIDC-IDRI-0657/0001.png",
+    "output_mask": "/home/wenting/zr/wt_dataset/LIDC_IDRI/img_complex_fb_256_pseudomask_10ch/LIDC-IDRI-0657/0001.npz"
+  },
+  "trace": [
+    {
+      "step": 0,
+      "dt": 0.20000000298023224,
+      "before": {
+        "z_img": {
+          "mean": 0.0032251894008368254,
+          "std": 0.9903257489204407,
+          "min": -3.4375,
+          "max": 3.4375
+        },
+        "z_mask": {
+          "mean": 0.0046155392192304134,
+          "std": 1.0062096118927002,
+          "min": -3.671875,
+          "max": 3.4375
+        }
+      },
+      "after": {
+        "z_img": {
+          "mean": 0.049417346715927124,
+          "std": 0.8925569653511047,
+          "min": -2.609375,
+          "max": 3.171875
+        },
+        "z_mask": {
+          "mean": 0.0046155392192304134,
+          "std": 1.0062096118927002,
+          "min": -3.671875,
+          "max": 3.4375
+        }
+      },
+      "pred_img": {
+        "mean": 0.2309178113937378,
+        "std": 1.6233713626861572,
+        "min": -7.59375,
+        "max": 7.9375
+      },
+      "pred_mask": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    {
+      "step": 1,
+      "dt": 0.20000000298023224,
+      "before": {
+        "z_img": {
+          "mean": 0.049417346715927124,
+          "std": 0.8925569653511047,
+          "min": -2.609375,
+          "max": 3.171875
+        },
+        "z_mask": {
+          "mean": 0.0046155392192304134,
+          "std": 1.0062096118927002,
+          "min": -3.671875,
+          "max": 3.4375
+        }
+      },
+      "after": {
+        "z_img": {
+          "mean": -0.002284117043018341,
+          "std": 0.7723874449729919,
+          "min": -3.046875,
+          "max": 2.59375
+        },
+        "z_mask": {
+          "mean": 0.0046155392192304134,
+          "std": 1.0062096118927002,
+          "min": -3.671875,
+          "max": 3.4375
+        }
+      },
+      "pred_img": {
+        "mean": -0.2584654688835144,
+        "std": 2.1241326332092285,
+        "min": -10.375,
+        "max": 7.0625
+      },
+      "pred_mask": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    {
+      "step": 2,
+      "dt": 0.20000001788139343,
+      "before": {
+        "z_img": {
+          "mean": -0.002284117043018341,
+          "std": 0.7723874449729919,
+          "min": -3.046875,
+          "max": 2.59375
+        },
+        "z_mask": {
+          "mean": 0.0046155392192304134,
+          "std": 1.0062096118927002,
+          "min": -3.671875,
+          "max": 3.4375
+        }
+      },
+      "after": {
+        "z_img": {
+          "mean": -0.011532284319400787,
+          "std": 0.722788393497467,
+          "min": -2.984375,
+          "max": 2.75
+        },
+        "z_mask": {
+          "mean": 0.0046155392192304134,
+          "std": 1.0062096118927002,
+          "min": -3.671875,
+          "max": 3.4375
+        }
+      },
+      "pred_img": {
+        "mean": -0.04605904221534729,
+        "std": 1.510683536529541,
+        "min": -6.15625,
+        "max": 6.4375
+      },
+      "pred_mask": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    {
+      "step": 3,
+      "dt": 0.20000004768371582,
+      "before": {
+        "z_img": {
+          "mean": -0.011532284319400787,
+          "std": 0.722788393497467,
+          "min": -2.984375,
+          "max": 2.75
+        },
+        "z_mask": {
+          "mean": 0.0046155392192304134,
+          "std": 1.0062096118927002,
+          "min": -3.671875,
+          "max": 3.4375
+        }
+      },
+      "after": {
+        "z_img": {
+          "mean": -0.016596153378486633,
+          "std": 0.7561361193656921,
+          "min": -2.890625,
+          "max": 2.609375
+        },
+        "z_mask": {
+          "mean": 0.0046155392192304134,
+          "std": 1.0062096118927002,
+          "min": -3.671875,
+          "max": 3.4375
+        }
+      },
+      "pred_img": {
+        "mean": -0.025347411632537842,
+        "std": 1.3829563856124878,
+        "min": -5.40625,
+        "max": 4.625
+      },
+      "pred_mask": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    {
+      "step": 4,
+      "dt": 0.19999992847442627,
+      "before": {
+        "z_img": {
+          "mean": -0.016596153378486633,
+          "std": 0.7561361193656921,
+          "min": -2.890625,
+          "max": 2.609375
+        },
+        "z_mask": {
+          "mean": 0.0046155392192304134,
+          "std": 1.0062096118927002,
+          "min": -3.671875,
+          "max": 3.4375
+        }
+      },
+      "after": {
+        "z_img": {
+          "mean": -0.010308504104614258,
+          "std": 0.8561601638793945,
+          "min": -3.0625,
+          "max": 3.15625
+        },
+        "z_mask": {
+          "mean": 0.0046155392192304134,
+          "std": 1.0062096118927002,
+          "min": -3.671875,
+          "max": 3.4375
+        }
+      },
+      "pred_img": {
+        "mean": 0.03150796890258789,
+        "std": 1.3172364234924316,
+        "min": -5.5,
+        "max": 5.875
+      },
+      "pred_mask": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    }
+  ],
+  "config": {
+    "jsonl_path": "/home/wenting/zr/wt_dataset/LIDC_IDRI/anno/cxr_synth_anno_mask_train.jsonl",
+    "sample_id": null,
+    "model_path": "Shitao/OmniGen-v1",
+    "lora_path": "results/30000",
+    "mask_modules_path": "results/30000/mask_modules.bin",
+    "output_dir": "debug_inference_loop_output",
+    "mask_latent_channels": 4,
+    "num_steps": 5,
+    "guidance_scale": 2.5,
+    "img_guidance_scale": 2.0,
+    "seed": 42,
+    "max_image_size": 1024,
+    "mask_threshold": 0.0,
+    "device": "cuda:0",
+    "dtype": "torch.bfloat16",
+    "use_kv_cache": true
+  }
+}
