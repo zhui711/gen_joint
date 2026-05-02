@@ -274,6 +274,19 @@ def main(args):
         model.llm.enable_input_require_grads()
         model = get_peft_model(model, transformer_lora_config)
 
+        # Re-enable gradients for the custom joint-mask modules after PEFT wrapping.
+        # `get_peft_model()` freezes all non-adapter parameters, so these must be
+        # restored here or they will be excluded from the optimizer.
+        inner_model = _get_inner_omnigen_model(model)
+        if inner_model.mask_x_embedder is not None:
+            requires_grad(inner_model.mask_x_embedder, True)
+        if inner_model.mask_final_layer is not None:
+            requires_grad(inner_model.mask_final_layer, True)
+        if inner_model.image_modality_embed is not None:
+            inner_model.image_modality_embed.requires_grad_(True)
+        if inner_model.mask_modality_embed is not None:
+            inner_model.mask_modality_embed.requires_grad_(True)
+
         if args.lora_resume_path:
             if accelerator.is_main_process:
                 logger.info(f"Loading LoRA adapter weights from {args.lora_resume_path}")
