@@ -1,0 +1,90 @@
+{
+  "config": {
+    "jsonl_path": "/home/wenting/zr/wt_dataset/LIDC_IDRI/anno/cxr_synth_anno_mask_train.jsonl",
+    "sample_id": null,
+    "model_path": "Shitao/OmniGen-v1",
+    "lora_path": "results/10000",
+    "mask_modules_path": "results/10000/mask_modules.bin",
+    "output_dir": "ode_latent_gap_diagnostic",
+    "report_path": "LATENT_GAP_REPORT.md",
+    "mask_key": "mask",
+    "mask_latent_channels": 4,
+    "inference_steps": 50,
+    "guidance_scale": 2.5,
+    "img_guidance_scale": 2.0,
+    "seed": 42,
+    "max_image_size": 1024,
+    "device": "cuda:0",
+    "dtype": "bf16",
+    "use_kv_cache": false,
+    "offload_kv_cache": false,
+    "scale_check_files": "OmniGen/train_helper/loss_joint_mask.py,test_joint_mask.py,OmniGen/pipeline.py,OmniGen/scheduler.py",
+    "torch_dtype": "torch.bfloat16"
+  },
+  "scale_check": {
+    "files": [
+      "OmniGen/train_helper/loss_joint_mask.py",
+      "test_joint_mask.py",
+      "OmniGen/pipeline.py",
+      "OmniGen/scheduler.py"
+    ],
+    "matches": [],
+    "numeric_factors": [],
+    "hardcoded_mask_scale_found": false
+  },
+  "results": {
+    "sample_id": "LIDC-IDRI-0657_0001",
+    "sample": {
+      "task_type": "image_edit",
+      "instruction": "<img><|image_1|></img> Edit the view using delta pose: d_theta=-0.0247 rad, sin(d_azimuth)=0.0269, cos(d_azimuth)=0.9996.",
+      "input_images": [
+        "/home/wenting/zr/wt_dataset/LIDC_IDRI/img_complex_fb_256/LIDC-IDRI-0657/0000.png"
+      ],
+      "output_image": "/home/wenting/zr/wt_dataset/LIDC_IDRI/img_complex_fb_256/LIDC-IDRI-0657/0001.png",
+      "output_mask": "/home/wenting/zr/wt_dataset/LIDC_IDRI/img_complex_fb_256_pseudomask_10ch/LIDC-IDRI-0657/0001.npz"
+    },
+    "z_clean_stats": {
+      "min": -0.15140607953071594,
+      "max": 0.16077421605587006,
+      "mean": 0.024592680856585503,
+      "std": 0.09299707412719727,
+      "skewness": -0.40013182163238525,
+      "excess_kurtosis": -1.2399168014526367,
+      "p01": -0.1357068806886673,
+      "p50": 0.04118351638317108,
+      "p99": 0.14511522874236107
+    },
+    "z_ode_raw_stats": {
+      "min": -0.1767578125,
+      "max": 0.19921875,
+      "mean": 0.021111220121383667,
+      "std": 0.10003674775362015,
+      "skewness": -0.44878894090652466,
+      "excess_kurtosis": -1.1809821128845215,
+      "p01": -0.16015625,
+      "p50": 0.0391845703125,
+      "p99": 0.166015625
+    },
+    "z_ode_unscaled_stats": {
+      "min": -0.1767578125,
+      "max": 0.19921875,
+      "mean": 0.021111220121383667,
+      "std": 0.10003674775362015,
+      "skewness": -0.44878894090652466,
+      "excess_kurtosis": -1.1809821128845215,
+      "p01": -0.16015625,
+      "p50": 0.0391845703125,
+      "p99": 0.166015625
+    },
+    "l2_to_clean": 1.479086995124817,
+    "relative_l2_to_clean": 0.24025171951367053,
+    "cosine_similarity": 0.9747059345245361,
+    "gt_mask_grid": "ode_latent_gap_diagnostic/LIDC-IDRI-0657_0001_gt_mask_grid.png",
+    "clean_recon_grid": "ode_latent_gap_diagnostic/LIDC-IDRI-0657_0001_clean_recon_grid.png",
+    "ode_recon_grid": "ode_latent_gap_diagnostic/LIDC-IDRI-0657_0001_ode_recon_grid.png",
+    "clean_recon_union": "ode_latent_gap_diagnostic/LIDC-IDRI-0657_0001_clean_recon_union.png",
+    "ode_recon_union": "ode_latent_gap_diagnostic/LIDC-IDRI-0657_0001_ode_recon_union.png",
+    "generated_image": "ode_latent_gap_diagnostic/LIDC-IDRI-0657_0001_generated_image.png",
+    "latent_histogram": "ode_latent_gap_diagnostic/LIDC-IDRI-0657_0001_latent_histogram.png"
+  }
+}
