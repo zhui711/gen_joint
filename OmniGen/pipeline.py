@@ -165,6 +165,7 @@ class OmniGenPipeline:
         output_type: str = "pil",
         save_mask: bool = False,
         mask_threshold: float = 0.0,
+        mask_scale_factor: float = 1.0,
         ):
         r"""
         Function invoked when calling the pipeline for generation.
@@ -208,6 +209,9 @@ class OmniGenPipeline:
                 If True and joint mask mode is active, also return decoded masks.
             mask_threshold (`float`, *optional*, defaults to 0.0):
                 Threshold for binarizing predicted masks.
+            mask_scale_factor (`float`, *optional*, defaults to 1.0):
+                Scale factor used during mask flow training. Generated mask
+                latents are divided by this value before MaskDecoder.
         Examples:
 
         Returns:
@@ -220,6 +224,8 @@ class OmniGenPipeline:
             assert height%16 == 0 and width%16 == 0
         if input_images is None:
             use_img_guidance = False
+        if mask_scale_factor <= 0:
+            raise ValueError("mask_scale_factor must be > 0.")
         if isinstance(prompt, str):
             prompt = [prompt]
             input_images = [input_images] if input_images is not None else None
@@ -361,7 +367,8 @@ class OmniGenPipeline:
             mask_samples_clean = mask_samples_clean.to(torch.float32)
             if self.mask_decoder is not None:
                 self.mask_decoder.to(self.device)
-                decoded_masks = self.mask_decoder(mask_samples_clean)  # (B, 10, 256, 256)
+                mask_samples_unscaled = mask_samples_clean / mask_scale_factor
+                decoded_masks = self.mask_decoder(mask_samples_unscaled)  # (B, 10, 256, 256)
                 # Threshold: tanh output in [-1, 1], threshold at mask_threshold
                 binary_masks = (decoded_masks > mask_threshold).float()
                 output_masks = binary_masks.cpu()

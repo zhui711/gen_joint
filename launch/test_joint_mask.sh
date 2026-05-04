@@ -34,6 +34,7 @@ SEED=42
 # --- Joint mask settings ---
 MASK_LATENT_CHANNELS=4
 MASK_THRESHOLD=0.0
+MASK_SCALE_FACTOR=10.0
 
 # --- Resolution settings (match training preprocessing) ---
 MAX_IMAGE_SIZE=1024
@@ -57,6 +58,7 @@ PY_ARGS=(
     --seed "${SEED}"
     --save_masks
     --mask_threshold "${MASK_THRESHOLD}"
+    --mask_scale_factor "${MASK_SCALE_FACTOR}"
     --keep_raw_resolution
     --max_image_size "${MAX_IMAGE_SIZE}"
 )

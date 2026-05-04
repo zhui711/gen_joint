@@ -2,13 +2,17 @@
 
 This module implements the co-generation training loss for Plan 2:
   1. Encode GT image to image latent via frozen VAE.
-  2. Encode GT mask to mask latent via the trainable MaskEncoder.
+  2. Encode GT mask to raw mask latent via the trainable MaskEncoder.
+  2b. Scale the raw mask latent before flow matching so its target support is
+      closer to the unit-Gaussian ODE trajectory.
   3. Sample shared noise and timestep for both modalities.
   4. Compute noisy states for both image and mask latents.
   5. Run the joint model forward (predicts velocities for both).
   6. Compute MSE loss on predicted velocities vs GT velocities.
   7. Optionally add a lightweight reconstruction regularizer.
-  8. Return weighted combination: L_img + lambda_mask * L_mask + lambda_recon * L_recon.
+  8. Return weighted combination:
+     L_img + lambda_mask * L_mask + lambda_recon * L_recon
+     + lambda_latent_l2 * L_latent_l2.
 
 No frozen segmentation model is needed. No VAE decode in the loss path.
 """
@@ -46,6 +50,9 @@ def training_losses_joint_mask(
     mask_decoder=None,
     gt_mask_cont=None,
     lambda_recon=0.0,
+    mask_scale_factor=1.0,
+    mask_smooth_std=0.0,
+    lambda_latent_l2=0.0,
 ):
     """
     Joint rectified-flow loss for image and mask latents.
@@ -55,20 +62,41 @@ def training_losses_joint_mask(
         x1_img: VAE-encoded GT target image latent.
             - tensor (B, 4, H, W) for fixed-resolution, or
             - list of tensors (1, 4, H, W) for variable-resolution.
-        x1_mask: Mask-encoder output GT mask latent (B, 4, 32, 32).
+        x1_mask: Raw MaskEncoder output GT mask latent (B, 4, 32, 32).
         model_kwargs: Keyword arguments for the OmniGen forward pass.
         lambda_mask: Weight for the mask velocity loss.
         mask_decoder: Optional MaskDecoder used for auxiliary reconstruction.
         gt_mask_cont: Optional GT masks in [-1, 1], shape (B, 10, H, W).
         lambda_recon: Weight for the optional reconstruction loss.
+        mask_scale_factor: Multiplicative scale applied to raw mask latents
+            before flow matching. Inference must divide generated mask latents
+            by the same value before MaskDecoder.
+        mask_smooth_std: Gaussian noise std added in scaled latent space before
+            reconstruction unscale, making MaskDecoder robust to continuous
+            off-manifold perturbations.
+        lambda_latent_l2: Weight for raw latent L2 regularization.
 
     Returns:
-        Dict with 'loss', 'loss_img', 'loss_mask', 'loss_recon'.
+        Dict with 'loss', 'loss_img', 'loss_mask', 'loss_recon',
+        'loss_latent_l2'.
     """
     if model_kwargs is None:
         model_kwargs = {}
+    if mask_scale_factor <= 0:
+        raise ValueError("mask_scale_factor must be > 0.")
+    if mask_smooth_std < 0:
+        raise ValueError("mask_smooth_std must be >= 0.")
 
     B = len(x1_img)
+
+    # Pseudo-KL term on the raw autoencoder latent. This keeps the latent
+    # support compact without changing MaskEncoder/MaskDecoder architecture.
+    x1_mask_raw = x1_mask
+    loss_latent_l2 = torch.mean(x1_mask_raw.float() ** 2)
+
+    # Flow matching operates on the scaled latent so the mask branch has a
+    # numerically meaningful target scale relative to unit Gaussian noise.
+    x1_mask = x1_mask_raw * mask_scale_factor
 
     # Sample noise for both modalities
     x0_img = sample_x0(x1_img)
@@ -118,10 +146,9 @@ def training_losses_joint_mask(
     # Mask velocity loss
     loss_mask = mean_flat((pred_mask - ut_mask) ** 2).mean()
 
-    # Optional reconstruction loss.
-    #
-    # When lambda_recon == 0.0 we must remain mathematically equivalent to the
-    # current SOTA run, so we bypass MaskDecoder entirely.
+    # Optional reconstruction loss. The decoder is trained on unscaled latents,
+    # but receives a noisy scaled latent that is unscaled first. This teaches it
+    # to tolerate the continuous perturbations produced by ODE inference.
     if lambda_recon == 0.0:
         loss_recon = loss_img.new_zeros(())
     else:
@@ -129,15 +156,26 @@ def training_losses_joint_mask(
             raise ValueError("mask_decoder must be provided when lambda_recon > 0.")
         if gt_mask_cont is None:
             raise ValueError("gt_mask_cont must be provided when lambda_recon > 0.")
-        recon_mask = mask_decoder(x1_mask)
+        if mask_smooth_std > 0:
+            x1_mask_noisy = x1_mask + torch.randn_like(x1_mask) * mask_smooth_std
+        else:
+            x1_mask_noisy = x1_mask
+        x1_mask_unscaled = x1_mask_noisy / mask_scale_factor
+        recon_mask = mask_decoder(x1_mask_unscaled)
         loss_recon = F.mse_loss(recon_mask.float(), gt_mask_cont.float())
 
     # Combined loss
-    loss = loss_img + lambda_mask * loss_mask + lambda_recon * loss_recon
+    loss = (
+        loss_img
+        + lambda_mask * loss_mask
+        + lambda_recon * loss_recon
+        + lambda_latent_l2 * loss_latent_l2
+    )
 
     return {
         "loss": loss,
         "loss_img": loss_img,
         "loss_mask": loss_mask,
         "loss_recon": loss_recon,
+        "loss_latent_l2": loss_latent_l2,
     }

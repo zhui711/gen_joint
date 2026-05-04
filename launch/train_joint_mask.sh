@@ -35,6 +35,9 @@ LORA_RANK=32
 LORA_ALPHA=32
 LORA_TARGETS="qkv_proj o_proj gate_up_proj down_proj"
 LAMBDA_MASK=0.25
+MASK_SCALE_FACTOR=10.0
+MASK_SMOOTH_STD=0.1
+LAMBDA_LATENT_L2=0.01
 MASK_LATENT_CH=4
 MAX_TRAIN_STEPS=100000
 LOG_EVERY=1
@@ -62,6 +65,9 @@ CMD="accelerate launch \
     --lora_target_modules ${LORA_TARGETS} \
     --lambda_mask ${LAMBDA_MASK} \
     --lambda_recon 0.0 \
+    --mask_scale_factor ${MASK_SCALE_FACTOR} \
+    --mask_smooth_std ${MASK_SMOOTH_STD} \
+    --lambda_latent_l2 ${LAMBDA_LATENT_L2} \
     --mask_latent_channels ${MASK_LATENT_CH} \
     --max_train_steps ${MAX_TRAIN_STEPS} \
     --keep_raw_resolution \

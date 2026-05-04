@@ -318,6 +318,7 @@ def generation_worker(rank: int, num_gpus: int, chunks: List[List[Dict]], args_d
                         seed=args.seed,
                         save_mask=args.save_masks,
                         mask_threshold=args.mask_threshold,
+                        mask_scale_factor=args.mask_scale_factor,
                     )
                 else:
                     result = pipe(
@@ -337,6 +338,7 @@ def generation_worker(rank: int, num_gpus: int, chunks: List[List[Dict]], args_d
                         seed=args.seed,
                         save_mask=args.save_masks,
                         mask_threshold=args.mask_threshold,
+                        mask_scale_factor=args.mask_scale_factor,
                     )
 
                 # ---- Unpack image / mask outputs ----
@@ -681,6 +683,15 @@ def parse_args():
     parser.add_argument(
         "--mask_threshold", type=float, default=0.0,
         help="Threshold for binarizing decoded masks.",
+    )
+    parser.add_argument(
+        "--mask_scale_factor",
+        type=float,
+        default=1.0,
+        help=(
+            "Scale factor used during mask flow training. Generated mask latents "
+            "are divided by this value before MaskDecoder."
+        ),
     )
     parser.add_argument(
         "--keep_raw_resolution", action="store_true",
