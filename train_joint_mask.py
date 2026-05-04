@@ -345,8 +345,6 @@ def main(args):
         logger.info(f"lambda_mask={args.lambda_mask}")
         logger.info(f"lambda_recon={args.lambda_recon}")
         logger.info(f"mask_scale_factor={args.mask_scale_factor}")
-        logger.info(f"mask_smooth_std={args.mask_smooth_std}")
-        logger.info(f"lambda_latent_l2={args.lambda_latent_l2}")
 
     ema = None
     if args.use_ema:
@@ -461,7 +459,6 @@ def main(args):
     running_loss_img = 0
     running_loss_mask = 0
     running_loss_recon = 0
-    running_loss_latent_l2 = 0
     start_time = time()
 
     if accelerator.is_main_process:
@@ -533,8 +530,6 @@ def main(args):
                     gt_mask_cont=mask_cont,
                     lambda_recon=args.lambda_recon,
                     mask_scale_factor=args.mask_scale_factor,
-                    mask_smooth_std=args.mask_smooth_std,
-                    lambda_latent_l2=args.lambda_latent_l2,
                 )
                 loss = loss_dict["loss"]
 
@@ -542,7 +537,6 @@ def main(args):
                 running_loss_img += loss_dict["loss_img"].item()
                 running_loss_mask += loss_dict["loss_mask"].item()
                 running_loss_recon += loss_dict["loss_recon"].item()
-                running_loss_latent_l2 += loss_dict["loss_latent_l2"].item()
 
                 accelerator.backward(loss)
                 if args.max_grad_norm is not None and accelerator.sync_gradients:
@@ -561,7 +555,6 @@ def main(args):
                         "training_loss_img": loss_dict["loss_img"].item(),
                         "training_loss_mask": loss_dict["loss_mask"].item(),
                         "training_loss_recon": loss_dict["loss_recon"].item(),
-                        "training_loss_latent_l2": loss_dict["loss_latent_l2"].item(),
                     },
                     step=train_steps,
                 )
@@ -579,26 +572,22 @@ def main(args):
                     avg_loss_img = torch.tensor(running_loss_img / log_steps, device=device)
                     avg_loss_mask = torch.tensor(running_loss_mask / log_steps, device=device)
                     avg_loss_recon = torch.tensor(running_loss_recon / log_steps, device=device)
-                    avg_loss_latent_l2 = torch.tensor(running_loss_latent_l2 / log_steps, device=device)
                     if dist.is_available() and dist.is_initialized():
                         dist.all_reduce(avg_loss, op=dist.ReduceOp.SUM)
                         dist.all_reduce(avg_loss_img, op=dist.ReduceOp.SUM)
                         dist.all_reduce(avg_loss_mask, op=dist.ReduceOp.SUM)
                         dist.all_reduce(avg_loss_recon, op=dist.ReduceOp.SUM)
-                        dist.all_reduce(avg_loss_latent_l2, op=dist.ReduceOp.SUM)
                     avg_loss = avg_loss.item() / accelerator.num_processes
                     avg_loss_img = avg_loss_img.item() / accelerator.num_processes
                     avg_loss_mask = avg_loss_mask.item() / accelerator.num_processes
                     avg_loss_recon = avg_loss_recon.item() / accelerator.num_processes
-                    avg_loss_latent_l2 = avg_loss_latent_l2.item() / accelerator.num_processes
 
                     if accelerator.is_main_process:
                         cur_lr = opt.param_groups[0]["lr"]
                         logger.info(
                             f"(step={global_step:07d}) "
                             f"Loss: {avg_loss:.4f} "
-                            f"(img={avg_loss_img:.4f}, mask={avg_loss_mask:.4f}, "
-                            f"recon={avg_loss_recon:.4f}, latent_l2={avg_loss_latent_l2:.4f}), "
+                            f"(img={avg_loss_img:.4f}, mask={avg_loss_mask:.4f}, recon={avg_loss_recon:.4f}), "
                             f"Steps/Sec: {steps_per_sec:.2f}, Epoch: {train_steps / len(loader):.2f}, LR: {cur_lr}"
                         )
 
@@ -606,7 +595,6 @@ def main(args):
                     running_loss_img = 0
                     running_loss_mask = 0
                     running_loss_recon = 0
-                    running_loss_latent_l2 = 0
                     log_steps = 0
                     start_time = time()
 
@@ -742,21 +730,6 @@ if __name__ == "__main__":
             "Scale applied to raw MaskEncoder latents before mask flow matching. "
             "Inference must divide generated mask latents by the same value before decoding."
         ),
-    )
-    parser.add_argument(
-        "--mask_smooth_std",
-        type=float,
-        default=0.0,
-        help=(
-            "Gaussian noise std added in scaled mask latent space before reconstruction "
-            "unscale when lambda_recon > 0."
-        ),
-    )
-    parser.add_argument(
-        "--lambda_latent_l2",
-        type=float,
-        default=0.0,
-        help="Weight for raw mask latent L2 regularization.",
     )
     parser.add_argument(
         "--mask_ae_ckpt",
